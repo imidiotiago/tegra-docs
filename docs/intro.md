@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+slug: /
 ---
 
 # Tegra — Plataforma de Gestão para Cooperativas de Seguros
