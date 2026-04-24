@@ -4,123 +4,160 @@ sidebar_position: 16
 
 # Conformidade SUSEP
 
-O módulo de conformidade da Tegra automatiza o controle das obrigações regulatórias junto à Superintendência de Seguros Privados (SUSEP). O painel centraliza o acompanhamento de todos os envios periódicos obrigatórios — FIP, SRO e demais relatórios — com alertas automáticos de prazo, identificação inteligente de meses sem movimento e rastreamento de status por competência.
+O módulo de conformidade da Tegra automatiza o controle das obrigações regulatórias junto à Superintendência de Seguros Privados (SUSEP). Por não existir legislação específica para cooperativas de seguros no Brasil, a plataforma interpreta e aplica a legislação vigente para seguradoras — orientação confirmada por consultoria jurídica especializada.
 
-## Obrigações Regulatórias Cobertas
+O painel centraliza o acompanhamento de todos os envios periódicos obrigatórios com alertas automáticos de prazo, identificação inteligente de meses sem movimento e rastreamento de status por competência.
+
+## Relatórios Regulatórios Obrigatórios
 
 ### FIP — Formulário de Informações Periódicas
 
-O FIP é a principal obrigação de reporte periódico à SUSEP. Deve ser enviado mensalmente, contendo:
+O FIP é a principal obrigação de reporte periódico à SUSEP. Deve ser enviado mensalmente contendo cinco quadros:
 
-- Estatísticas de apólices emitidas e prêmios por produto
-- Sinistros registrados, aprovados e pagos
-- Provisões técnicas constituídas
-- Dados de comissões e repasses
+| Quadro | Conteúdo |
+|---|---|
+| Quadro 1 — Prêmios | Apólices emitidas, canceladas e prêmio retido por singular × produto |
+| Quadro 2 — Sinistros | Sinistros avisados, em análise, aprovados (PSL), pagos e negados com valores |
+| Quadro 3 — Provisões | Reservas técnicas: valor exigido, PSL constituído e saldo atual |
+| Quadro 4 — Financeiro | Receita de prêmios, despesas com sinistros, comissões e repasses |
+| Quadro 5 — Cadastral | Cooperados, apólices ativas e produtos por singular |
 
-O prazo para envio do FIP é o último dia útil do mês seguinte ao período de referência. Atrasos resultam em multas e podem comprometer o registro da cooperativa junto à SUSEP.
+O prazo para envio é o dia 20 do mês seguinte ao período de referência. Atrasos podem resultar em multas e comprometer o registro junto à SUSEP.
 
-### SRO — Sistema de Registro de Operações
-
-O SRO é o módulo de registro de operações junto à registradora habilitada pela SUSEP. Exige que apólices e endossos sejam registrados em tempo real ou em batches periódicos, criando rastreabilidade nacional das operações de seguros.
-
-:::note Status de implementação
-O módulo de controle FIP/SRO está em produção. A integração direta com a registradora está no roadmap — atualmente a plataforma gera os dados e controla o status manualmente ou via API futura.
+:::tip FIP tecnicamente correto
+O Quadro 2 contabiliza sinistros com status **APROVADO** separadamente como PSL (Provisão de Sinistros a Liquidar) — valor já comprometido mas ainda não pago. O cálculo de sinistros pendentes usa `valorAprovado` para APROVADO e `valorReclamado` como estimativa para ABERTO/EM_ANALISE, evitando distorção regulatória.
 :::
+
+O FIP é gerado em `/relatorios/fip` com export em XML e CSV. O download registra automaticamente o status como **GERADO** no controle de envios.
+
+### SRO — Sinistros Reportados Ocorridos
+
+O SRO lista todos os sinistros **avisados** (registrados) na competência, com granularidade individual por sinistro. É a base para análise regulatória de adequação das reservas constituídas.
+
+Cada linha do SRO contém:
+
+| Campo | Descrição |
+|---|---|
+| Nº Sinistro | Número único do sinistro |
+| Produto | Ramo do seguro |
+| Status | ABERTO, EM_ANALISE, APROVADO, PAGO ou NEGADO |
+| Data de ocorrência | Quando o evento segurado aconteceu |
+| Data de aviso | Quando foi registrado no sistema |
+| Valor reclamado | Valor informado pelo segurado |
+| Valor aprovado | Valor aprovado pela cooperativa (quando disponível) |
+| Reserva constituída (PSL) | `valorAprovado` para APROVADO; `valorReclamado` para pendentes; zero para encerrados |
+| Valor pago | Para sinistros com status PAGO |
+
+O SRO é gerado em `/relatorios/sro` com export CSV (BOM UTF-8 para Excel). O download registra automaticamente o status como **GERADO** no controle de envios.
+
+### Quadro Estatístico
+
+O Quadro Estatístico apresenta os índices regulatórios consolidados por singular × produto — a base para avaliação da saúde financeira de cada linha de negócio:
+
+| Índice | Fórmula | Alerta |
+|---|---|---|
+| Sinistralidade | Sinistros pagos ÷ prêmio arrecadado × 100 | > 80%: atenção regulatória |
+| Índice de comissões | Comissões ÷ prêmio × 100 | Monitoramento de custo |
+| Índice de repasses | Repasses ÷ prêmio × 100 | Monitoramento de custo |
+| **Índice combinado** | Soma dos três | **> 100%: operação deficitária** |
+
+O Quadro Estatístico é gerado em `/relatorios/quadro-estatistico` com export CSV. Valores acima dos limiares são destacados em amarelo (> 80%) ou vermelho (> 100%) na interface.
 
 ## Painel de Conformidade
 
-O painel em `/admin/conformidade` exibe o calendário de obrigações do ano, organizado por mês e tipo de relatório:
+O painel em `/admin/conformidade` exibe o calendário de obrigações do ano, organizado por mês:
 
 | Coluna | Descrição |
 |---|---|
 | Competência | Mês de referência (ex: Janeiro 2026) |
-| Prazo | Data limite para envio |
+| Prazo | Dia 20 do mês seguinte |
 | Dias restantes | Contador regressivo |
 | Status FIP | PENDENTE / GERADO / ENVIADO / ACEITO / REJEITADO |
 | Status SRO | PENDENTE / GERADO / ENVIADO / ACEITO / REJEITADO |
 
 ### Identificação de Meses sem Movimento
 
-Uma funcionalidade crítica do módulo: o sistema identifica automaticamente **meses sem movimento operacional** para uma dada singular — ou seja, competências sem nenhuma apólice emitida, sinistro registrado ou prêmio arrecadado. Nesses meses, o envio do FIP/SRO não é obrigatório, e o painel marca esses períodos como "Não aplicável" — evitando alertas de atraso indevidos para meses sem operação.
+O sistema identifica automaticamente **meses sem movimento operacional** — competências sem apólice emitida, sinistro registrado **ou** prêmio arrecadado. Esses meses são marcados como "Não aplicável", evitando alertas de atraso indevidos.
+
+A detecção usa três fontes simultâneas:
+1. Pagamentos recebidos na competência
+2. Sinistros registrados no mês
+3. Apólices emitidas no mês
 
 :::tip Precisão nos alertas
-Sistemas legados costumam gerar alertas de atraso para todos os meses, incluindo períodos em que a cooperativa ainda não estava operacional. A Tegra distingue "mês sem envio" de "mês sem operação" — reduzindo ruído e focando os alertas no que realmente importa.
+Sistemas legados geram alertas para todos os meses, incluindo períodos sem operação. A Tegra distingue "mês sem envio" de "mês sem operação" — focando os alertas no que realmente importa para o compliance.
 :::
 
 ### Alertas Automáticos
 
-O painel exibe indicadores de atenção proeminentes:
+- **Envios atrasados**: competências vencidas sem status ENVIADO ou ACEITO (só para meses com movimento)
+- **Envios urgentes**: prazo em menos de 7 dias
+- **Provisões insuficientes**: reservas abaixo do mínimo regulatório
+- **Singulares sem UF**: impossível gerar FIP sem estado configurado
 
-- **Envios atrasados**: competências já vencidas sem status ENVIADO ou ACEITO (apenas para meses com movimento)
-- **Envios urgentes**: competências com prazo em menos de 7 dias
-- **Provisões insuficientes**: singulares com reservas técnicas abaixo do mínimo regulatório
-- **Singulares sem UF configurada**: impossível gerar FIP sem o estado da cooperativa cadastrado
-
-### Status por Competência
-
-Para cada mês, o operador pode atualizar o status de FIP e SRO conforme o processo real de envio:
-
-1. **PENDENTE** — dados ainda sendo preparados
-2. **GERADO** — arquivo ou dados gerados, aguardando envio
-3. **ENVIADO** — submetido ao portal SUSEP, aguardando confirmação
-4. **ACEITO** — SUSEP aceitou o envio sem erros
-5. **REJEITADO** — SUSEP rejeitou — requer correção e reenvio
-
-Cada atualização de status é registrada com usuário responsável e timestamp no audit log.
+:::note Alertas precisos
+A flag "atrasado" respeita o status do envio: se a FIP foi enviada e aceita antes do prazo, o mês **não** aparece como atrasado — mesmo que a data já tenha passado.
+:::
 
 ## Provisões Técnicas
 
-O módulo monitora as provisões técnicas de cada singular por competência:
+As provisões técnicas são gerenciadas em `/financeiro/provisoes`. O cálculo segue a Circular SUSEP 521 (interpretada para cooperativas):
 
-- **Prêmio total arrecadado** no mês
-- **Percentual de reserva** (padrão: 40%, configurável)
-- **Valor de reserva calculado**
-- **Saldo atual** da reserva
-- **Situação**: ADEQUADA ou INSUFICIENTE
+| Campo | Descrição |
+|---|---|
+| Prêmio arrecadado | Pagamentos recebidos na competência |
+| % de reserva | **Mínimo obrigatório: 40%** — API rejeita valores abaixo |
+| Valor de reserva | Prêmio × percentual |
+| PSL (saldo comprometido) | Sinistros com status APROVADO aguardando pagamento (`valorAprovado`) |
+| Saldo disponível | Prêmio − PSL |
+| Situação | **ADEQUADA** se saldo ≥ reserva; **INSUFICIENTE** caso contrário |
 
-Provisões insuficientes são destacadas no painel com alerta vermelho e contadas no indicador de "Alertas" da tela principal.
+:::warning Mínimo regulatório
+O sistema **bloqueia** qualquer cálculo com percentual abaixo de 40%. A interface exibe aviso em vermelho e desabilita o botão de cálculo se o campo estiver configurado com valor inferior.
+:::
 
-## Relatório para Auditoria
+## Audit Trail de Conformidade
 
-O módulo exporta um relatório consolidado de conformidade por ano com:
+Cada atualização de status (FIP, SRO, Quadro Estatístico) é registrada no audit log imutável com:
+- Usuário responsável e IP de origem
+- Timestamp preciso
+- Status anterior e novo status
 
-- Status de cada envio por mês e por tipo
-- Histórico de mudanças de status com responsável
-- Indicadores de provisões por competência
-- Singulares com pendências
-
-Esse relatório é o documento-base para apresentação em auditorias externas, fiscalizações da SUSEP e reuniões de diretoria.
+Esse histórico é o documento-base para auditorias externas e fiscalizações da SUSEP.
 
 ## Funcionalidades
 
 | Funcionalidade | Papel |
 |---|---|
-| Visualizar painel de conformidade anual | ADMIN_FEDERACAO |
-| Atualizar status de FIP/SRO por competência | ADMIN_FEDERACAO |
-| Ver alertas de prazo e provisões | ADMIN_FEDERACAO |
-| Exportar relatório de conformidade | ADMIN_FEDERACAO |
-| Visualizar provisões técnicas por singular | ADMIN_FEDERACAO, GESTOR_COOPERATIVA |
+| Visualizar painel de conformidade anual | ADMIN_CENTRAL |
+| Atualizar status de FIP/SRO por competência | ADMIN_CENTRAL |
+| Gerar e baixar FIP (XML + CSV) | ADMIN_CENTRAL |
+| Gerar e baixar SRO (CSV) | ADMIN_CENTRAL |
+| Gerar e baixar Quadro Estatístico (CSV) | ADMIN_CENTRAL |
+| Calcular provisões técnicas | ADMIN_CENTRAL |
+| Ver alertas de prazo e provisões | ADMIN_CENTRAL |
+| Visualizar provisões por singular | ADMIN_CENTRAL, GESTOR_COOPERATIVA |
 
-## Fluxo de Uso — Controle Mensal
+## Fluxo de Uso — Rotina Mensal
 
-1. **ADMIN_FEDERACAO** acessa `/admin/conformidade` no início do mês
-2. Visualiza o painel do ano atual com status de todos os meses
+1. **ADMIN_CENTRAL** acessa `/admin/conformidade` no início do mês
+2. Visualiza o calendário com status de todos os meses do ano
 3. Identifica competências atrasadas ou urgentes nos alertas do topo
-4. Para a competência do mês anterior, extrai os dados do sistema (relatório FIP)
-5. Acessa o portal da SUSEP, faz o envio do FIP
-6. Volta ao painel da Tegra e atualiza o status para ENVIADO
-7. Quando a SUSEP confirmar o aceite, atualiza para ACEITO
+4. Acessa `/relatorios/fip` → seleciona a competência → baixa XML ou CSV
+5. Acessa `/relatorios/sro` → seleciona a competência → baixa CSV
+6. Submete os arquivos ao portal da SUSEP
+7. Volta ao painel e atualiza o status para ENVIADO
+8. Quando a SUSEP confirmar o aceite, atualiza para ACEITO
 
 ## Fluxo de Uso — Resposta a Auditoria
 
-1. Auditor externo solicita comprovante de envios SUSEP do ano anterior
-2. **ADMIN_FEDERACAO** acessa `/admin/conformidade` e seleciona o ano solicitado
+1. Auditor externo solicita comprovante de envios do ano anterior
+2. **ADMIN_CENTRAL** acessa `/admin/conformidade` e seleciona o ano
 3. Visualiza o status de todos os envios com datas e responsáveis
-4. Exporta o relatório em PDF ou CSV
-5. Compartilha com o auditor como evidência documental
+4. Extrai o relatório como evidência documental
 
 ![Painel de conformidade SUSEP](../static/img/screenshots/conformidade-painel.png)
 
 :::info Captura sugerida
-Calendário de conformidade anual com uma linha por mês, mostrando: competência, prazo, dias restantes (contador colorido: verde/amarelo/vermelho), badge de status FIP e badge de status SRO. Alertas no topo: "3 envios atrasados", "2 provisões insuficientes". Meses sem movimento marcados com badge cinza "Não aplicável".
+Calendário de conformidade anual com uma linha por mês: competência, prazo, dias restantes (contador colorido), badge FIP e badge SRO. Alertas no topo: "3 envios atrasados", "2 provisões insuficientes". Meses sem movimento com badge cinza "Não aplicável".
 :::

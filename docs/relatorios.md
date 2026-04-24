@@ -4,168 +4,132 @@ sidebar_position: 15
 
 # Relatórios
 
-O módulo de relatórios da Tegra oferece um construtor self-service que permite a gestores e administradores criar, filtrar e exportar relatórios customizados sem depender de TI. A abordagem declarativa do catálogo de entidades facilita a expansão futura com novas entidades e campos sem mudanças de interface.
+O módulo de relatórios da Tegra cobre dois tipos distintos de necessidade: relatórios **regulatórios obrigatórios** (FIP, SRO e Quadro Estatístico para a SUSEP) e um **construtor self-service** para análise interna sob demanda.
+
+## Relatórios Regulatórios SUSEP
+
+Acessíveis em `/relatorios`, esses relatórios atendem às obrigações periódicas junto à SUSEP. Cada download registra automaticamente o status **GERADO** no painel de conformidade.
+
+### FIP — Formulário de Informações Periódicas
+
+Disponível em `/relatorios/fip`. Gera os cinco quadros obrigatórios para a competência selecionada:
+
+- **Quadro 1 — Prêmios**: emitidos, cancelados e retidos por singular × produto
+- **Quadro 2 — Sinistros**: avisados, em análise, **aprovados (PSL)**, pagos e negados — com valorAprovado para sinistros já comprometidos e valorReclamado como estimativa para pendentes
+- **Quadro 3 — Provisões**: reserva exigida (mín. 40%), PSL atual e saldo disponível
+- **Quadro 4 — Financeiro**: receitas, sinistros pagos, comissões e repasses
+- **Quadro 5 — Cadastral**: cooperados, apólices ativas e produtos por singular
+
+**Formatos de export**: XML (estruturado) e CSV (compatível Excel). Ambos incluem BOM UTF-8 para acentuação correta.
+
+### SRO — Sinistros Reportados Ocorridos
+
+Disponível em `/relatorios/sro`. Gera a listagem individual de todos os sinistros **avisados** na competência selecionada (data de registro no sistema).
+
+Cada linha inclui: número do sinistro, produto, status, data de ocorrência, data de aviso, valor reclamado, valor aprovado e **reserva constituída (PSL)** calculada pelo critério regulatório:
+
+- Status APROVADO → reserva = `valorAprovado` (já comprometido)
+- Status ABERTO ou EM_ANALISE → reserva = `valorReclamado` (estimativa)
+- Status PAGO ou NEGADO → reserva = zero (encerrado)
+
+A aba "Totais" consolida por singular × produto: avisados, pendentes, pagos, negados, reserva total e total pago.
+
+**Formato de export**: CSV com BOM UTF-8.
+
+### Quadro Estatístico
+
+Disponível em `/relatorios/quadro-estatistico`. Apresenta os índices regulatórios consolidados por singular × produto para a competência:
+
+| Índice | Fórmula | Limiar de alerta |
+|---|---|---|
+| Sinistralidade | Sinistros pagos ÷ prêmio × 100 | Amarelo > 80%, Vermelho > 100% |
+| Comissões % | Comissões pagas ÷ prêmio × 100 | Monitoramento |
+| Repasses % | Repasses devidos ÷ prêmio × 100 | Monitoramento |
+| **Índice combinado** | Soma dos três | **Vermelho > 100% (operação deficitária)** |
+
+Além dos índices, o quadro consolida: apólices emitidas/ativas/canceladas, prêmio arrecadado, sinistros por status, valor pago e reserva PSL.
+
+**Formato de export**: CSV com BOM UTF-8.
+
+### IOF — Imposto sobre Operações Financeiras
+
+Disponível em `/relatorios/iof`. Apuração mensal do IOF retido por apólice e competência, baseada nas alíquotas do Decreto 6.306/2007:
+
+| Produto | Alíquota |
+|---|---|
+| AUTO, RESIDENCIAL, EMPRESARIAL | 7,38% |
+| VIDA, SAÚDE | 0,38% |
+| PREVIDÊNCIA | 0% |
+
+### Prestação de Contas — Consolidado
+
+Disponível em `/relatorios/susep`. Demonstrativo por período com visão consolidada de todas as singulares: apólices ativas, prêmio total, sinistros, sinistralidade e comissões.
 
 ## Report Builder Self-Service
 
-O construtor de relatórios está disponível em `/relatorios/builder` e funciona em três passos:
+Disponível em `/relatorios/builder`. Permite criar relatórios customizados sem depender de TI:
 
-1. **Selecionar a entidade** — escolha qual conjunto de dados analisar
-2. **Escolher os campos** — marque os campos que devem aparecer no relatório
-3. **Configurar filtros** — filtre por singular, período, status, etc.
-4. **Gerar e exportar** — visualize os dados na tela ou baixe em CSV
-
-Não há limite de colunas ou linhas — o sistema gera o relatório completo e permite download em CSV para análise em Excel ou ferramentas de BI.
+1. **Selecionar a entidade** — Apólices, Cooperados, Sinistros, Leads ou Pagamentos
+2. **Escolher os campos** — checkboxes com todos os campos disponíveis
+3. **Configurar filtros** — singular, período, status e outros filtros por entidade
+4. **Gerar e exportar** — visualize na tela ou baixe em CSV
 
 :::tip Independência de TI
-O construtor permite que o gestor da cooperativa crie seus próprios relatórios sob demanda, sem precisar abrir chamado para a equipe técnica. Relatórios ad hoc em minutos, não dias.
+O gestor cria seus próprios relatórios sob demanda — sem abrir chamado para a equipe técnica. Relatórios ad hoc em minutos.
 :::
 
-## Entidades Disponíveis
+### Entidades e Campos Disponíveis
 
-O catálogo de entidades cobre os cinco objetos centrais da operação:
+**Apólices**: número, produto, status, plano, prêmio mensal, desconto, vigência, segurado (nome, CPF, e-mail, telefone), singular.
 
-### Apólices
+**Cooperados**: nome, CPF, e-mail, telefone, data de nascimento, data de cadastro, singular.
 
-Campos disponíveis:
-- Número da apólice, produto, status, plano
-- Prêmio mensal, prêmio bruto, desconto aplicado (% e valor)
-- Início e fim de vigência, data de emissão
-- Cooperativa singular (nome)
-- Segurado: nome, CPF, e-mail, telefone
+**Sinistros**: número, produto, status, data de ocorrência, valor reclamado, valor aprovado, segurado (nome, CPF), singular.
 
-Filtros: singular, período de emissão, status (ATIVA, SUSPENSA, CANCELADA, VENCIDA)
+**Leads**: nome, CPF, e-mail, telefone, CEP, produto de interesse, origem, estágio, prêmio estimado, responsável, singular.
 
-### Cooperados
-
-Campos disponíveis:
-- Nome, CPF, e-mail, telefone
-- Data de nascimento, data de cadastro
-- Cooperativa singular
-
-Filtros: singular, período de cadastro
-
-### Sinistros
-
-Campos disponíveis:
-- Número do sinistro, produto, status
-- Data da ocorrência, valor reclamado, valor aprovado
-- Segurado: nome, CPF
-- Cooperativa singular
-
-Filtros: singular, período de ocorrência, status
-
-### Leads
-
-Campos disponíveis:
-- Nome, CPF, e-mail, telefone
-- CEP, produto de interesse, origem do lead
-- Estágio no funil, prêmio estimado
-- Responsável, data de criação
-- Cooperativa singular
-
-Filtros: singular, período, estágio, produto, origem
-
-### Pagamentos
-
-Campos disponíveis:
-- Competência, valor, status
-- Data de vencimento, data de pagamento
-- Apólice: número e produto
-- Segurado: nome, CPF
-- Cooperativa singular
-
-Filtros: singular, competência, status (PENDENTE, PAGO, ATRASADO, CANCELADO)
-
-## Relatórios Específicos do Módulo Financeiro
-
-Além do builder genérico, o módulo financeiro disponibiliza relatórios pré-construídos:
-
-### Fluxo de Caixa
-
-Visão consolidada de entradas e saídas por período:
-- Prêmios arrecadados por mês
-- Sinistros pagos por mês
-- Repasses realizados para a federação
-- Saldo líquido por período
-
-### Provisões Técnicas
-
-Relatório regulatório de provisões por competência:
-- Prêmio total do mês
-- Percentual de reserva aplicado
-- Valor de reserva calculado
-- Situação (ADEQUADA ou INSUFICIENTE)
-
-### Comissões por Competência
-
-Detalhamento de comissões por apólice em cada período:
-- Apólice, produto, prêmio, percentual de comissão, valor
-- Status do pagamento da comissão
-
-### Repasses por Singular
-
-Para o ADMIN_FEDERACAO: visão consolidada de repasses de todas as singulares:
-- Valor devido, valor pago, saldo
-- Status por competência
-- Singulares em atraso destacadas
-
-## Relatório FIP para SUSEP
-
-O módulo de conformidade gera automaticamente os dados necessários para o preenchimento do FIP (Formulário de Informações Periódicas) exigido pela SUSEP. O relatório consolida por competência:
-
-- Total de apólices emitidas por produto
-- Prêmios arrecadados por produto
-- Sinistros registrados e valores
-- Provisões técnicas constituídas
+**Pagamentos**: competência, valor, status, data de vencimento, data de pagamento, apólice (número, produto), segurado (nome, CPF), singular.
 
 ## Exportação
 
-Todos os relatórios suportam exportação em **CSV** — formato compatível com Microsoft Excel, Google Sheets e qualquer ferramenta de BI (Power BI, Metabase, etc.).
+Todos os relatórios exportam em **CSV com BOM UTF-8** — compatível com Microsoft Excel, Google Sheets e qualquer ferramenta de BI (Power BI, Metabase, etc.).
 
-O arquivo CSV inclui:
-- Cabeçalho com os labels dos campos selecionados em português
-- Uma linha por registro
-- Formatação de valores monetários como decimais
-- Formatação de datas no padrão brasileiro (DD/MM/AAAA)
-
-## Controle de Acesso aos Relatórios
+## Controle de Acesso
 
 | Relatório | Acesso |
 |---|---|
 | Builder — dados da própria singular | GESTOR_COOPERATIVA, OPERADOR_COOPERATIVA |
-| Builder — dados de todas as singulares | ADMIN_FEDERACAO |
-| Financeiro (fluxo de caixa, repasses) | GESTOR_COOPERATIVA, ADMIN_FEDERACAO |
-| Provisões técnicas | GESTOR_COOPERATIVA, ADMIN_FEDERACAO |
-| FIP/SRO (conformidade SUSEP) | ADMIN_FEDERACAO |
+| Builder — dados de todas as singulares | ADMIN_CENTRAL |
+| FIP / SRO / Quadro Estatístico | ADMIN_CENTRAL |
+| IOF | ADMIN_CENTRAL |
+| Prestação de Contas | ADMIN_CENTRAL |
+| Provisões técnicas | GESTOR_COOPERATIVA, ADMIN_CENTRAL |
 
 ## Fluxo de Uso — Relatório de Apólices Ativas
 
 1. **GESTOR_COOPERATIVA** acessa `/relatorios/builder`
 2. Seleciona entidade "Apólices"
-3. Marca os campos: número, segurado (nome, CPF), produto, plano, prêmio, vigência, status
-4. Configura filtros: singular = sua cooperativa, status = ATIVA, período = mês atual
-5. Clica em "Gerar Relatório"
-6. Visualiza na tela a tabela com os dados
-7. Clica em "Exportar CSV" para baixar e abrir no Excel
+3. Campos: número, segurado (nome, CPF), produto, plano, prêmio, vigência, status
+4. Filtros: singular = minha cooperativa, status = ATIVA
+5. Gera e exporta CSV para análise no Excel
 
-## Fluxo de Uso — Relatório de Inadimplência
+## Fluxo de Uso — Pacote Mensal SUSEP
 
-1. **GESTOR_COOPERATIVA** acessa `/relatorios/builder`
-2. Seleciona entidade "Pagamentos"
-3. Campos: segurado, apólice, competência, valor, data vencimento, status
-4. Filtros: status = ATRASADO, período = últimos 3 meses
-5. Gera e exporta CSV
-6. Usa o arquivo para acionamento de cobrança ou envio de WhatsApp em lote
+1. **ADMIN_CENTRAL** aguarda o encerramento do mês
+2. Acessa `/relatorios/fip` → competência do mês → baixa XML
+3. Acessa `/relatorios/sro` → mesma competência → baixa CSV
+4. Acessa `/relatorios/quadro-estatistico` → mesma competência → baixa CSV (verificação interna)
+5. Envia FIP e SRO ao portal da SUSEP
+6. Atualiza o status no painel de conformidade (`/admin/conformidade`)
 
 ![Report builder com seleção de campos](../static/img/screenshots/relatorios-builder.png)
 
 :::info Captura sugerida
-Interface do report builder dividida em três colunas: (1) seletor de entidade com cards clicáveis, (2) lista de campos com checkboxes e tipo de dado, (3) filtros configuráveis. Preview do resultado abaixo com paginação e botão "Exportar CSV".
+Interface do report builder dividida em três colunas: (1) seletor de entidade com cards clicáveis, (2) lista de campos com checkboxes, (3) filtros configuráveis. Preview do resultado abaixo com botão "Exportar CSV".
 :::
 
 ![Painel financeiro com gráficos](../static/img/screenshots/relatorios-financeiro.png)
 
 :::info Captura sugerida
-Painel financeiro com gráfico de barras de arrecadação mensal, cards de KPI (prêmios do mês, inadimplência, comissões pendentes), e tabela de repasses por singular com status.
+Painel financeiro com gráfico de barras de arrecadação mensal, cards de KPI (prêmios do mês, inadimplência, comissões pendentes) e tabela de repasses por singular com status.
 :::
