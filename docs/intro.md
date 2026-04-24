@@ -9,7 +9,7 @@ slug: /
 Antes de mergulhar na documentação, veja o **[🗺️ Mapa Interativo do Sistema](/mapa)** — um painel clicável com todos os módulos, fluxos e perfis de usuário em uma só tela.
 :::
 
-A **Tegra** é uma plataforma completa de gestão para federações e cooperativas de seguros, desenvolvida para substituir sistemas legados fragmentados por uma solução integrada, moderna e regulatoriamente conforme. Ela cobre todo o ciclo de vida do seguro cooperativo — da captação de leads à emissão de apólices, gestão de sinistros, controles financeiros e conformidade SUSEP — em um único ambiente multitenante.
+A **Tegra** é uma plataforma completa de gestão para centrais e cooperativas de seguros, desenvolvida para substituir sistemas legados fragmentados por uma solução integrada, moderna e regulatoriamente conforme. Ela cobre todo o ciclo de vida do seguro cooperativo — da captação de leads à emissão de apólices, gestão de sinistros, controles financeiros e conformidade SUSEP — em um único ambiente multitenante.
 
 :::tip Por que Tegra?
 O mercado de seguros cooperativos opera com sistemas desenvolvidos há décadas, sem integração nativa entre módulos, sem portabilidade mobile e sem automação regulatória. A Tegra foi construída do zero para resolver exatamente esses gargalos.
@@ -17,7 +17,7 @@ O mercado de seguros cooperativos opera com sistemas desenvolvidos há décadas,
 
 ## O que é a Tegra
 
-A Tegra atende federações que gerenciam múltiplas cooperativas singulares (tenants), garantindo isolamento completo de dados entre elas ao mesmo tempo em que oferece visão consolidada para a central. Cada singular opera com identidade visual própria, produtos habilitados individualmente e equipes com permissões ajustadas ao seu contexto — tudo gerenciado a partir de um único painel administrativo.
+A Tegra atende centrais que gerenciam múltiplas cooperativas singulares (tenants), garantindo isolamento completo de dados entre elas ao mesmo tempo em que oferece visão consolidada para a central. Cada singular opera com identidade visual própria, produtos habilitados individualmente e equipes com permissões ajustadas ao seu contexto — tudo gerenciado a partir de um único painel administrativo.
 
 A plataforma é projetada para três perfis de usuário:
 
@@ -31,7 +31,7 @@ A plataforma é projetada para três perfis de usuário:
 
 | Módulo | Descrição |
 |---|---|
-| [Federação e Singulares](./federacao-singulares) | Arquitetura multitenante com isolamento LGPD e identidade visual por tenant |
+| [Central e Singulares](./federacao-singulares) | Arquitetura multitenante com isolamento LGPD e identidade visual por tenant |
 | [Produtos e Módulos](./modulos-produtos) | Catálogo de produtos com planos Bronze/Prata/Ouro e coberturas à la carte |
 | [Motor de Cálculo](./motor-calculo) | Precificação regional automática com fatores de risco e tabelas por UF |
 | [Leads e Captação](./leads) | CRM com fast-track, pipeline de vendas e landing pages tematizadas |
@@ -65,7 +65,7 @@ A plataforma é projetada para três perfis de usuário:
 
 ## Para Investidores e Compradores
 
-A Tegra foi construída com foco em escalabilidade e conformidade regulatória desde a concepção. Sua arquitetura multitenante permite onboarding de novas singulares sem alterações de código. O modelo de licenciamento por federação cria receita recorrente previsível. A plataforma está em operação ativa com dados reais, documentação técnica completa e processo de deploy automatizado via Docker e PM2 cluster.
+A Tegra foi construída com foco em escalabilidade e conformidade regulatória desde a concepção. Sua arquitetura multitenante permite onboarding de novas singulares sem alterações de código. O modelo de licenciamento por central cria receita recorrente previsível. A plataforma está em operação ativa com dados reais, documentação técnica completa e processo de deploy automatizado via Docker e PM2 cluster.
 
 O setor de seguros cooperativos no Brasil movimenta mais de R$ 8 bilhões em prêmios anuais, com mais de 200 cooperativas singulares vinculadas ao sistema OCB. A digitalização dessas operações ainda está no início — a Tegra posiciona seus clientes na vanguarda desse processo.
 
