@@ -5,6 +5,10 @@ slug: /
 
 # Tegra — Plataforma de Gestão para Cooperativas de Seguros
 
+:::note Explore visualmente
+Antes de mergulhar na documentação, veja o **[🗺️ Mapa Interativo do Sistema](/mapa)** — um painel clicável com todos os módulos, fluxos e perfis de usuário em uma só tela.
+:::
+
 A **Tegra** é uma plataforma completa de gestão para federações e cooperativas de seguros, desenvolvida para substituir sistemas legados fragmentados por uma solução integrada, moderna e regulatoriamente conforme. Ela cobre todo o ciclo de vida do seguro cooperativo — da captação de leads à emissão de apólices, gestão de sinistros, controles financeiros e conformidade SUSEP — em um único ambiente multitenante.
 
 :::tip Por que Tegra?

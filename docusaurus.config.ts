@@ -66,6 +66,11 @@ const config: Config = {
           label: "Documentação",
         },
         {
+          to: "/mapa",
+          label: "🗺️ Mapa do Sistema",
+          position: "left",
+        },
+        {
           href: "https://tegra.soufluir.com",
           label: "↗ Acessar Sistema",
           position: "right",

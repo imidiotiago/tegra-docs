@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa do Sistema — Cooperativa Seguros</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #1e3a5f;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header .logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  header h1 { font-size: 18px; font-weight: 700; color: #f1f5f9; }
+  header p { font-size: 13px; color: #64748b; margin-top: 2px; }
+  header .badge {
+    margin-left: auto;
+    background: #1e3a5f;
+    color: #60a5fa;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #2563eb44;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 16px;
+    margin-top: 40px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  /* ARCH DIAGRAM — top level */
+  .arch-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+
+  .arch-node {
+    flex: 1;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+  }
+  .arch-node .icon { font-size: 32px; margin-bottom: 8px; }
+  .arch-node h3 { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+  .arch-node p { font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.5; }
+  .arch-node .count {
+    display: inline-block;
+    margin-top: 10px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+
+  .arch-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    padding-top: 30px;
+    color: #334155;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .arch-node.federation { border-color: #3b82f6; background: #1e293b; }
+  .arch-node.federation .icon-wrap {
+    display: inline-block;
+    background: #1d4ed822;
+    border-radius: 50%;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  .arch-node.singular { border-color: #8b5cf6; }
+  .arch-node.member { border-color: #10b981; }
+  .arch-node.operator { border-color: #f59e0b; }
+
+  /* MODULES GRID */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .module-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+  .module-card:hover {
+    border-color: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px #00000044;
+  }
+  .module-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 24px #00000055;
+  }
+
+  .module-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .module-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .module-title { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+  .module-subtitle { font-size: 11px; color: #64748b; margin-top: 1px; }
+
+  .module-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .tag {
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid;
+  }
+  .tag-blue { background: #1e40af22; color: #60a5fa; border-color: #2563eb44; }
+  .tag-purple { background: #6d28d922; color: #a78bfa; border-color: #7c3aed44; }
+  .tag-green { background: #06503522; color: #34d399; border-color: #10b98144; }
+  .tag-orange { background: #92400e22; color: #fbbf24; border-color: #f59e0b44; }
+  .tag-red { background: #7f1d1d22; color: #f87171; border-color: #ef444444; }
+  .tag-gray { background: #1e293b; color: #94a3b8; border-color: #334155; }
+
+  .module-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+
+  /* DETAIL PANEL */
+  .detail-panel {
+    display: none;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 16px;
+    animation: fadeIn 0.2s ease;
+  }
+  .detail-panel.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-panel h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 6px;
+  }
+  .detail-panel .lead {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .detail-cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .detail-col h4 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 12px;
+  }
+  .detail-col ul {
+    list-style: none;
+  }
+  .detail-col li {
+    font-size: 12px;
+    color: #94a3b8;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .detail-col li .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent, #3b82f6);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .flow-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .flow-step {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+  .flow-arrow {
+    color: #334155;
+    padding: 0 6px;
+    font-size: 16px;
+  }
+
+  /* ROLES SECTION */
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .role-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .role-card .role-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .role-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .role-name { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+  .role-scope { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .role-card ul { list-style: none; }
+  .role-card li {
+    font-size: 12px;
+    color: #94a3b8;
+    padding: 4px 0;
+    display: flex;
+    gap: 8px;
+  }
+  .role-card li::before { content: '→'; color: #475569; flex-shrink: 0; }
+
+  /* DATA FLOW */
+  .flow-diagram {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 40px;
+  }
+  .flow-diagram h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 20px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+  }
+  .flow-box.blue { background: #1e40af22; color: #93c5fd; border-color: #2563eb55; }
+  .flow-box.purple { background: #6d28d922; color: #c4b5fd; border-color: #7c3aed55; }
+  .flow-box.green { background: #06503522; color: #6ee7b7; border-color: #10b98155; }
+  .flow-box.orange { background: #92400e22; color: #fcd34d; border-color: #f59e0b55; }
+  .flow-box.red { background: #7f1d1d22; color: #fca5a5; border-color: #ef444455; }
+  .flow-line { color: #475569; font-size: 16px; }
+
+  /* SEARCH */
+  .search-bar {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: #e2e8f0;
+    font-size: 14px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 24px;
+    outline: none;
+  }
+  .search-bar:focus { border-color: #3b82f6; }
+  .search-bar::placeholder { color: #475569; }
+
+  /* STATS */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 140px;
+  }
+  .stat-box .num {
+    font-size: 28px;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-box .label {
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 32px;
+    color: #334155;
+    font-size: 12px;
+  }
+
+  .close-btn {
+    float: right;
+    background: none;
+    border: none;
+    color: #475569;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  .close-btn:hover { color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🛡️</div>
+  <div>
+    <h1>Cooperativa Seguros Platform</h1>
+    <p>Mapa interativo do sistema — clique em qualquer módulo para ver detalhes</p>
+  </div>
+  <div class="badge">v2.0 · Produção</div>
+</header>
+
+<div class="container">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="num" style="color:#60a5fa">10</div>
+      <div class="label">Módulos principais</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="color:#a78bfa">6</div>
+      <div class="label">Produtos de seguro</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="color:#34d399">3</div>
+      <div class="label">Tipos de usuário</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="color:#fbbf24">2</div>
+      <div class="label">Portais (backoffice + PWA)</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="color:#f87171">4</div>
+      <div class="label">Integrações externas</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="color:#94a3b8">∞</div>
+      <div class="label">Multi-tenant isolado</div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section-title">Estrutura organizacional</div>
+  <div class="arch-row" style="margin-bottom: 40px">
+
+    <div class="arch-node federation">
+      <div class="icon">🏛️</div>
+      <h3>Federação</h3>
+      <p>Central que gerencia todas as singulares. Acesso total — vê e consolida tudo.</p>
+      <span class="count">1 por instalação</span>
+    </div>
+
+    <div class="arch-arrow">→</div>
+
+    <div class="arch-node singular">
+      <div class="icon">🏢</div>
+      <h3>Singulares (Cooperativas)</h3>
+      <p>Cada singular tem seu próprio slug, branding, WhatsApp e módulos habilitados. Dados 100% isolados.</p>
+      <span class="count">N singulares</span>
+    </div>
+
+    <div class="arch-arrow">→</div>
+
+    <div class="arch-node member">
+      <div class="icon">👤</div>
+      <h3>Segurados</h3>
+      <p>Membros que acessam via PWA com a marca da sua singular. Login CPF+senha ou Google OAuth.</p>
+      <span class="count">N por singular</span>
+    </div>
+
+    <div class="arch-arrow">→</div>
+
+    <div class="arch-node operator">
+      <div class="icon">💼</div>
+      <h3>Operadores</h3>
+      <p>Funcionários com papéis: ADMIN_FEDERACAO, GESTOR_COOPERATIVA ou OPERADOR_COOPERATIVA.</p>
+      <span class="count">Roles hierárquicos</span>
+    </div>
+
+  </div>
+
+  <!-- ROLES -->
+  <div class="section-title">Quem usa o sistema</div>
+  <div class="roles-grid">
+    <div class="role-card">
+      <div class="role-header">
+        <span class="role-badge" style="background:#1e40af33;color:#93c5fd">ADMIN FEDERAÇÃO</span>
+      </div>
+      <div class="role-name">Administrador da Central</div>
+      <div class="role-scope">Vê tudo de todas as singulares</div>
+      <br>
+      <ul>
+        <li>Cadastrar/configurar singulares</li>
+        <li>Definir taxas, fatores e tributos</li>
+        <li>Gerar relatórios SUSEP</li>
+        <li>Painel de conformidade</li>
+        <li>Gerenciar credenciais B2B (API)</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-header">
+        <span class="role-badge" style="background:#6d28d933;color:#c4b5fd">GESTOR COOPERATIVA</span>
+      </div>
+      <div class="role-name">Gestor da Singular</div>
+      <div class="role-scope">Vê apenas sua cooperativa</div>
+      <br>
+      <ul>
+        <li>Gerenciar operadores da sua singular</li>
+        <li>Ver financeiro completo</li>
+        <li>Configurar módulos ativos</li>
+        <li>Autorizar descontos acima do limite do operador</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-header">
+        <span class="role-badge" style="background:#b4530033;color:#fcd34d">OPERADOR COOPERATIVA</span>
+      </div>
+      <div class="role-name">Operador</div>
+      <div class="role-scope">Vê apenas sua cooperativa</div>
+      <br>
+      <ul>
+        <li>Criar e gerenciar leads</li>
+        <li>Emitir apólices</li>
+        <li>Processar sinistros</li>
+        <li>Solicitar vistorias</li>
+        <li>Desconto máximo: 0% (só gestor libera)</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-header">
+        <span class="role-badge" style="background:#06503533;color:#6ee7b7">SEGURADO (PWA)</span>
+      </div>
+      <div class="role-name">Membro / Cooperado</div>
+      <div class="role-scope">Acessa via portal da sua singular</div>
+      <br>
+      <ul>
+        <li>Ver apólices e coberturas</li>
+        <li>Pagar boletos</li>
+        <li>Abrir sinistros</li>
+        <li>Enviar fotos de vistoria</li>
+        <li>Solicitar assistência 24h</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- DATA FLOW — ciclo principal -->
+  <div class="section-title">Fluxo principal — do lead à apólice</div>
+  <div class="flow-diagram">
+    <h3>Jornada de uma venda</h3>
+    <div class="flow-row">
+      <div class="flow-box blue">🌐 Lead chega</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box blue">CRM (NOVO)</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box purple">Cotação</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box purple">Motor de cálculo</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box green">Apólice emitida</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box orange">Vistoria IA</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box green">Apólice ATIVA</div>
+    </div>
+    <div class="flow-row" style="margin-top: 20px">
+      <div class="flow-box green">Apólice ATIVA</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box orange">Cobranças mensais</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box orange">Comissões</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box orange">Repasses à central</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box red">Relatórios SUSEP</div>
+    </div>
+    <div class="flow-row" style="margin-top: 20px">
+      <div class="flow-box green">Apólice ATIVA</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box red">Sinistro aberto</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box red">Análise</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box red">Aprovado → Pago</div>
+      <div class="flow-line">→</div>
+      <div class="flow-box red">Sinistralidade %</div>
+    </div>
+  </div>
+
+  <!-- MODULES -->
+  <div class="section-title">Módulos do sistema</div>
+  <input class="search-bar" type="text" placeholder="🔍  Buscar módulo..." id="search" oninput="filterModules()">
+
+  <div class="modules-grid" id="modules-grid">
+
+    <!-- 1. CRM / LEADS -->
+    <div class="module-card" style="--accent:#3b82f6" onclick="toggle('crm')" id="card-crm">
+      <div class="module-header">
+        <div class="module-icon" style="background:#1e40af22">📋</div>
+        <div>
+          <div class="module-title">Leads & CRM</div>
+          <div class="module-subtitle">Prospecção e gestão de clientes</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-blue">Operador</span>
+        <span class="tag tag-orange">Fast-track público</span>
+        <span class="tag tag-gray">WhatsApp</span>
+      </div>
+      <div class="module-desc">Funil de vendas do lead ao cliente. Captura pública via landing page, gestão interna com histórico de atividades.</div>
+    </div>
+
+    <!-- 2. COTACAO + MOTOR -->
+    <div class="module-card" style="--accent:#8b5cf6" onclick="toggle('cotacao')" id="card-cotacao">
+      <div class="module-header">
+        <div class="module-icon" style="background:#6d28d922">🧮</div>
+        <div>
+          <div class="module-title">Motor de Cálculo</div>
+          <div class="module-subtitle">Precificação de prêmios</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-purple">6 produtos</span>
+        <span class="tag tag-purple">A-la-carte</span>
+        <span class="tag tag-orange">Regras subscrição</span>
+      </div>
+      <div class="module-desc">Calcula prêmios por produto com taxas por UF, fatores de risco (idade, veículo, imóvel) e coberturas personalizáveis.</div>
+    </div>
+
+    <!-- 3. APOLICES -->
+    <div class="module-card" style="--accent:#10b981" onclick="toggle('apolices')" id="card-apolices">
+      <div class="module-header">
+        <div class="module-icon" style="background:#06503522">📄</div>
+        <div>
+          <div class="module-title">Apólices</div>
+          <div class="module-subtitle">Contratos de seguro emitidos</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-green">Emissão</span>
+        <span class="tag tag-green">Pró-rata</span>
+        <span class="tag tag-orange">Desconto auditado</span>
+      </div>
+      <div class="module-desc">Gestão completa do ciclo de vida das apólices: emissão, vigência, coberturas contratadas, suspensão e cancelamento.</div>
+    </div>
+
+    <!-- 4. SINISTROS -->
+    <div class="module-card" style="--accent:#ef4444" onclick="toggle('sinistros')" id="card-sinistros">
+      <div class="module-header">
+        <div class="module-icon" style="background:#7f1d1d22">🚨</div>
+        <div>
+          <div class="module-title">Sinistros</div>
+          <div class="module-subtitle">Gestão de sinistros e indenizações</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-red">Workflow</span>
+        <span class="tag tag-green">PWA membro</span>
+        <span class="tag tag-gray">Sinistralidade</span>
+      </div>
+      <div class="module-desc">Da abertura pelo membro até o pagamento pelo operador. Controle de sinistralidade por mês no dashboard.</div>
+    </div>
+
+    <!-- 5. VISTORIAS IA -->
+    <div class="module-card" style="--accent:#f59e0b" onclick="toggle('vistorias')" id="card-vistorias">
+      <div class="module-header">
+        <div class="module-icon" style="background:#92400e22">📸</div>
+        <div>
+          <div class="module-title">Vistorias com IA</div>
+          <div class="module-subtitle">Análise de fotos via Claude Vision</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-orange">IA (Claude)</span>
+        <span class="tag tag-green">PWA membro</span>
+        <span class="tag tag-red">Anti-fraude</span>
+      </div>
+      <div class="module-desc">Segurado envia fotos pelo celular. A IA analisa cada foto: detecção de fraude, validação de VIN/placa, consistência do odômetro.</div>
+    </div>
+
+    <!-- 6. FINANCEIRO -->
+    <div class="module-card" style="--accent:#06b6d4" onclick="toggle('financeiro')" id="card-financeiro">
+      <div class="module-header">
+        <div class="module-icon" style="background:#0e7490 33">💰</div>
+        <div>
+          <div class="module-title">Financeiro</div>
+          <div class="module-subtitle">Cobranças, repasses e provisões</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-blue">Boleto/PIX</span>
+        <span class="tag tag-purple">Repasses</span>
+        <span class="tag tag-green">Provisões SUSEP</span>
+      </div>
+      <div class="module-desc">Gestão financeira completa: cobranças mensais de prêmios, comissões de corretores, repasses à federação e reservas técnicas.</div>
+    </div>
+
+    <!-- 7. RELATORIOS / SUSEP -->
+    <div class="module-card" style="--accent:#ec4899" onclick="toggle('relatorios')" id="card-relatorios">
+      <div class="module-header">
+        <div class="module-icon" style="background:#831843 22">📊</div>
+        <div>
+          <div class="module-title">Relatórios & SUSEP</div>
+          <div class="module-subtitle">Conformidade regulatória</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-red">FIP</span>
+        <span class="tag tag-red">SRO</span>
+        <span class="tag tag-red">IOF</span>
+        <span class="tag tag-gray">Quadros</span>
+      </div>
+      <div class="module-desc">Geração e controle de envios à SUSEP. Painel de conformidade com alertas de atraso e status de cada relatório.</div>
+    </div>
+
+    <!-- 8. PWA SEGURADO -->
+    <div class="module-card" style="--accent:#6366f1" onclick="toggle('pwa')" id="card-pwa">
+      <div class="module-header">
+        <div class="module-icon" style="background:#312e8122">📱</div>
+        <div>
+          <div class="module-title">PWA do Segurado</div>
+          <div class="module-subtitle">Portal mobile para membros</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-purple">Por singular</span>
+        <span class="tag tag-blue">Offline</span>
+        <span class="tag tag-green">Push notifications</span>
+      </div>
+      <div class="module-desc">App instalável no celular. Cada singular tem sua própria URL, logo e cores. Acesso às apólices, boletos, sinistros e assistência.</div>
+    </div>
+
+    <!-- 9. ADMIN / CONFIG -->
+    <div class="module-card" style="--accent:#94a3b8" onclick="toggle('admin')" id="card-admin">
+      <div class="module-header">
+        <div class="module-icon" style="background:#1e293b">⚙️</div>
+        <div>
+          <div class="module-title">Administração</div>
+          <div class="module-subtitle">Configuração do sistema</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-gray">Taxas/UF</span>
+        <span class="tag tag-gray">Fatores risco</span>
+        <span class="tag tag-gray">Tributos</span>
+        <span class="tag tag-gray">Planos</span>
+      </div>
+      <div class="module-desc">Tabelas de precificação, fatores de subscrição, configuração de tributos (IOF, PIS, COFINS) e planos por produto.</div>
+    </div>
+
+    <!-- 10. INTEGRAÇÕES -->
+    <div class="module-card" style="--accent:#10b981" onclick="toggle('integracoes')" id="card-integracoes">
+      <div class="module-header">
+        <div class="module-icon" style="background:#06503522">🔌</div>
+        <div>
+          <div class="module-title">Integrações</div>
+          <div class="module-subtitle">APIs e serviços externos</div>
+        </div>
+      </div>
+      <div class="module-tags">
+        <span class="tag tag-green">WhatsApp</span>
+        <span class="tag tag-green">FIPE</span>
+        <span class="tag tag-green">CEP</span>
+        <span class="tag tag-green">Asaas</span>
+        <span class="tag tag-blue">B2B API</span>
+      </div>
+      <div class="module-desc">WhatsApp (Evolution API), consulta FIPE para autos, ViaCEP para endereços, gateway de pagamento Asaas e API B2B com OAuth.</div>
+    </div>
+
+  </div>
+
+  <!-- DETAIL PANELS -->
+
+  <div class="detail-panel" id="detail-crm">
+    <button class="close-btn" onclick="close('crm')">✕</button>
+    <h2>📋 Leads & CRM</h2>
+    <p class="lead">Funil completo de prospecção. Um lead pode vir de vários canais e percorre estágios até virar apólice — ou ser arquivado como perdido.</p>
+
+    <div style="margin-bottom: 20px">
+      <div style="font-size:11px;color:#475569;margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Funil de estágios</div>
+      <div class="flow-steps">
+        <div class="flow-step" style="border-color:#334155">NOVO</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#2563eb">CONTATO</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#7c3aed">COTAÇÃO</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#d97706">NEGOCIAÇÃO</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#059669">GANHO ✓</div>
+        <span style="color:#475569;padding:0 8px">ou</span>
+        <div class="flow-step" style="border-color:#dc2626">PERDIDO ✗</div>
+      </div>
+    </div>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Origens de entrada</h4>
+        <ul>
+          <li><span class="dot"></span>SITE — formulário de captação público</li>
+          <li><span class="dot"></span>FAST_TRACK — cotação rápida sem login</li>
+          <li><span class="dot"></span>WHATSAPP — integração automática</li>
+          <li><span class="dot"></span>TELEFONE — registro manual</li>
+          <li><span class="dot"></span>INDICAÇÃO — referral de membro</li>
+          <li><span class="dot"></span>EVENTO — feiras e eventos</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Atividades registradas</h4>
+        <ul>
+          <li><span class="dot"></span>Ligações telefônicas</li>
+          <li><span class="dot"></span>Mensagens WhatsApp</li>
+          <li><span class="dot"></span>E-mails enviados</li>
+          <li><span class="dot"></span>Reuniões agendadas</li>
+          <li><span class="dot"></span>Cotações geradas</li>
+          <li><span class="dot"></span>Notas livres</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Fast-track (página pública)</h4>
+        <ul>
+          <li><span class="dot"></span>3 campos: CEP, nascimento, gênero</li>
+          <li><span class="dot"></span>Estimativa de prêmio em segundos</li>
+          <li><span class="dot"></span>Sem login necessário</li>
+          <li><span class="dot"></span>Rate limit: 20 req/min por IP</li>
+          <li><span class="dot"></span>URL por singular: /captacao/[slug]</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Conversão para apólice</h4>
+        <ul>
+          <li><span class="dot"></span>1 clique: "Converter em apólice"</li>
+          <li><span class="dot"></span>Dados do lead pré-preenchidos</li>
+          <li><span class="dot"></span>Cotação completa gerada</li>
+          <li><span class="dot"></span>Lead arquivado como GANHO</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-cotacao">
+    <button class="close-btn" onclick="close('cotacao')">✕</button>
+    <h2>🧮 Motor de Cálculo</h2>
+    <p class="lead">Calcula o prêmio de qualquer produto com base em tabelas de taxa por UF, fatores de risco individuais e coberturas selecionadas.</p>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Produtos suportados</h4>
+        <ul>
+          <li><span class="dot"></span>🚗 AUTO — ano, categoria, financiado</li>
+          <li><span class="dot"></span>❤️ VIDA — idade, fumante, profissão</li>
+          <li><span class="dot"></span>🏠 RESIDENCIAL — construção, valor</li>
+          <li><span class="dot"></span>🏢 EMPRESARIAL — porte, setor</li>
+          <li><span class="dot"></span>🏥 SAÚDE — idade, condições</li>
+          <li><span class="dot"></span>💼 PREVIDÊNCIA — produto de poupança</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Fatores de risco</h4>
+        <ul>
+          <li><span class="dot"></span>Faixas etárias (multiplicadores)</li>
+          <li><span class="dot"></span>Categorias de veículo (FIPE)</li>
+          <li><span class="dot"></span>Tipo de construção do imóvel</li>
+          <li><span class="dot"></span>Ocupação/profissão</li>
+          <li><span class="dot"></span>Bônus-Malus (histórico sinistros)</li>
+          <li><span class="dot"></span>Taxa base por UF</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Modos de cotação</h4>
+        <ul>
+          <li><span class="dot"></span>Fast-track: medianas de mercado</li>
+          <li><span class="dot"></span>Completo: dados reais do segurado</li>
+          <li><span class="dot"></span>A-la-carte: escolha cobertura a cobertura</li>
+          <li><span class="dot"></span>Plano bundled: BRONZE/PRATA/OURO</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Regras de subscrição</h4>
+        <ul>
+          <li><span class="dot"></span>Limite de idade por produto</li>
+          <li><span class="dot"></span>Valor máximo de cobertura</li>
+          <li><span class="dot"></span>Restrições por ocupação</li>
+          <li><span class="dot"></span>Exige rastreador (AUTO)</li>
+          <li><span class="dot"></span>Exige vistoria prévia</li>
+          <li><span class="dot"></span>Declaração de saúde</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-apolices">
+    <button class="close-btn" onclick="close('apolices')">✕</button>
+    <h2>📄 Apólices</h2>
+    <p class="lead">Contratos de seguro emitidos. Cada apólice tem coberturas individuais, controle de vigência, pró-rata para início no meio do mês e rastreabilidade de descontos.</p>
+
+    <div style="margin-bottom: 20px">
+      <div style="font-size:11px;color:#475569;margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Estados da apólice</div>
+      <div class="flow-steps">
+        <div class="flow-step" style="border-color:#2563eb">ATIVA</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#d97706">SUSPENSA</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#dc2626">CANCELADA</div>
+        <span style="color:#475569;padding:0 12px">ou</span>
+        <div class="flow-step" style="border-color:#dc2626">VENCIDA</div>
+      </div>
+    </div>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Dados da apólice</h4>
+        <ul>
+          <li><span class="dot"></span>Número único gerado</li>
+          <li><span class="dot"></span>Vigência (inicio → fim)</li>
+          <li><span class="dot"></span>Prêmio bruto e líquido</li>
+          <li><span class="dot"></span>Desconto com motivo e quem aprovou</li>
+          <li><span class="dot"></span>Recibo para impressão</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Coberturas (a-la-carte)</h4>
+        <ul>
+          <li><span class="dot"></span>Cada cobertura tem valor mensal próprio</li>
+          <li><span class="dot"></span>Limite de indenização configurável</li>
+          <li><span class="dot"></span>Coberturas removíveis via endosso</li>
+          <li><span class="dot"></span>FIXO (R$) ou % do prêmio base</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Pró-rata</h4>
+        <ul>
+          <li><span class="dot"></span>Primeiro mês: dias restantes / dias totais</li>
+          <li><span class="dot"></span>Meses seguintes: prêmio integral</li>
+          <li><span class="dot"></span>Pagamento inicial proporcional criado automaticamente na emissão</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Descontos (auditados)</h4>
+        <ul>
+          <li><span class="dot"></span>OPERADOR: 0% máximo</li>
+          <li><span class="dot"></span>GESTOR: até 15%</li>
+          <li><span class="dot"></span>ADMIN: até 30%</li>
+          <li><span class="dot"></span>Motivo obrigatório + auditoria</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-sinistros">
+    <button class="close-btn" onclick="close('sinistros')">✕</button>
+    <h2>🚨 Sinistros</h2>
+    <p class="lead">Processo de abertura, análise e pagamento de indenizações. Pode ser iniciado pelo membro no app ou pelo operador no backoffice.</p>
+
+    <div style="margin-bottom: 20px">
+      <div style="font-size:11px;color:#475569;margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Workflow do sinistro</div>
+      <div class="flow-steps">
+        <div class="flow-step" style="border-color:#dc2626">ABERTO</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#d97706">EM_ANALISE</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#059669">APROVADO</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#059669">PAGO</div>
+        <span style="color:#475569;padding:0 8px">ou</span>
+        <div class="flow-step" style="border-color:#6b7280">NEGADO</div>
+      </div>
+    </div>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>O que o segurado informa</h4>
+        <ul>
+          <li><span class="dot"></span>Data da ocorrência</li>
+          <li><span class="dot"></span>Descrição do evento</li>
+          <li><span class="dot"></span>Valor reclamado</li>
+          <li><span class="dot"></span>Severidade (LEVE/MÉDIO/GRAVE)</li>
+          <li><span class="dot"></span>Categoria do dano</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>O que o operador faz</h4>
+        <ul>
+          <li><span class="dot"></span>Analisa documentação</li>
+          <li><span class="dot"></span>Define valor a aprovar</li>
+          <li><span class="dot"></span>Aprova, nega ou pede mais informações</li>
+          <li><span class="dot"></span>Registra pagamento da indenização</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>KPI no dashboard</h4>
+        <ul>
+          <li><span class="dot"></span>Sinistralidade = sinistros pagos ÷ prêmios arrecadados</li>
+          <li><span class="dot"></span>Acompanhar mês a mês</li>
+          <li><span class="dot"></span>Alerta se índice crítico</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Visibilidade por portal</h4>
+        <ul>
+          <li><span class="dot"></span>Backoffice: lista todos os sinistros da cooperativa</li>
+          <li><span class="dot"></span>PWA: membro vê só os seus</li>
+          <li><span class="dot"></span>Notificação push na mudança de status</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-vistorias">
+    <button class="close-btn" onclick="close('vistorias')">✕</button>
+    <h2>📸 Vistorias com IA</h2>
+    <p class="lead">O segurado fotografa o veículo/imóvel pelo celular. A IA (Claude Vision) analisa cada foto detectando fraudes, validando chassi e verificando consistência das imagens.</p>
+
+    <div style="margin-bottom: 20px">
+      <div style="font-size:11px;color:#475569;margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Status da vistoria</div>
+      <div class="flow-steps">
+        <div class="flow-step" style="border-color:#334155">PENDENTE</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#d97706">EM_ANALISE</div><div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:#059669">APROVADA → Apólice ativa</div>
+        <span style="color:#475569;padding:0 8px">ou</span>
+        <div class="flow-step" style="border-color:#dc2626">REPROVADA → Reenvio</div>
+      </div>
+    </div>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Fotos exigidas</h4>
+        <ul>
+          <li><span class="dot"></span>Frente do veículo/imóvel</li>
+          <li><span class="dot"></span>Traseira</li>
+          <li><span class="dot"></span>Lateral esquerda e direita</li>
+          <li><span class="dot"></span>Chassi / plaqueta</li>
+          <li><span class="dot"></span>Odômetro</li>
+          <li><span class="dot"></span>Documentos</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>O que a IA verifica</h4>
+        <ul>
+          <li><span class="dot"></span>Score de qualidade da foto (0–100)</li>
+          <li><span class="dot"></span>Labels detectados (modelo, cor, danos)</li>
+          <li><span class="dot"></span>Flags de fraude</li>
+          <li><span class="dot"></span>Sugestão: APROVADA / REPROVADA / REVISÃO</li>
+          <li><span class="dot"></span>Resultado salvo como JSON auditável</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Dados de contexto coletados</h4>
+        <ul>
+          <li><span class="dot"></span>Geolocalização no momento do envio</li>
+          <li><span class="dot"></span>IP e User-Agent</li>
+          <li><span class="dot"></span>Data/hora exata</li>
+          <li><span class="dot"></span>Score médio de todas as fotos</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Operador</h4>
+        <ul>
+          <li><span class="dot"></span>Vê resultado da IA por foto</li>
+          <li><span class="dot"></span>Pode reprocessar com IA</li>
+          <li><span class="dot"></span>Aprova ou reprova manualmente</li>
+          <li><span class="dot"></span>Aprovação ativa a apólice</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-financeiro">
+    <button class="close-btn" onclick="close('financeiro')">✕</button>
+    <h2>💰 Módulo Financeiro</h2>
+    <p class="lead">Cinco sub-módulos que cobrem todo o ciclo financeiro: desde a cobrança do prêmio ao membro até a reserva técnica exigida pela SUSEP.</p>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>1. Pagamentos (prêmios)</h4>
+        <ul>
+          <li><span class="dot"></span>Boleto ou PIX por apólice</li>
+          <li><span class="dot"></span>Status: PENDENTE → PAGO → ATRASADO</li>
+          <li><span class="dot"></span>Cron gera faturas mensalmente</li>
+          <li><span class="dot"></span>Webhook Asaas atualiza status</li>
+          <li><span class="dot"></span>Membro vê no PWA com barcode</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>2. Comissões</h4>
+        <ul>
+          <li><span class="dot"></span>% dos prêmios por apólice</li>
+          <li><span class="dot"></span>Por competência (mês/ano)</li>
+          <li><span class="dot"></span>Status: PENDENTE → PAGO → ESTORNADO</li>
+          <li><span class="dot"></span>Operador ou cron gera em lote</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>3. Repasses à Central</h4>
+        <ul>
+          <li><span class="dot"></span>Singular deve % à federação</li>
+          <li><span class="dot"></span>Status: PENDENTE → PAGO → ATRASADO</li>
+          <li><span class="dot"></span>Admin vê por singular e por mês</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>4. Provisões técnicas</h4>
+        <ul>
+          <li><span class="dot"></span>SUSEP exige reserva mínima</li>
+          <li><span class="dot"></span>Cron calcula: prêmioTotal × %</li>
+          <li><span class="dot"></span>Situação: ADEQUADA ou INSUFICIENTE</li>
+          <li><span class="dot"></span>Alerta no painel de conformidade</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-relatorios">
+    <button class="close-btn" onclick="close('relatorios')">✕</button>
+    <h2>📊 Relatórios & Conformidade SUSEP</h2>
+    <p class="lead">Geração dos relatórios exigidos pela SUSEP. Como não há legislação específica para cooperativas, a plataforma aplica a legislação de seguradoras (orientação jurídica confirmada em 24/04/2026).</p>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Tipos de relatório</h4>
+        <ul>
+          <li><span class="dot"></span>FIP — Formulário de Informações Periódicas (apólices, sinistros, reservas)</li>
+          <li><span class="dot"></span>SRO — Sinistros Reportados (detalhamento por sinistro)</li>
+          <li><span class="dot"></span>IOF — Auditoria de imposto (coletado vs. repassado)</li>
+          <li><span class="dot"></span>Quadros Estatísticos — Resumo geral</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Workflow do envio</h4>
+        <ul>
+          <li><span class="dot"></span>PENDENTE → gerar CSV</li>
+          <li><span class="dot"></span>GERADO → marcar como enviado</li>
+          <li><span class="dot"></span>ENVIADO → aguardar retorno SUSEP</li>
+          <li><span class="dot"></span>ACEITO ou REJEITADO</li>
+          <li><span class="dot"></span>Rastreamento por competência (mês/ano)</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Painel de conformidade</h4>
+        <ul>
+          <li><span class="dot"></span>Checklist mensal (Jan–Dez)</li>
+          <li><span class="dot"></span>Alertas de FIP atrasada</li>
+          <li><span class="dot"></span>Provisões insuficientes</li>
+          <li><span class="dot"></span>% de envios no prazo</li>
+          <li><span class="dot"></span>Taxa de rejeição</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Report Builder</h4>
+        <ul>
+          <li><span class="dot"></span>5 entidades: apólices, sinistros, leads, pagamentos, comissões</li>
+          <li><span class="dot"></span>Campos selecionáveis</li>
+          <li><span class="dot"></span>Filtros por período</li>
+          <li><span class="dot"></span>Export CSV com BOM UTF-8</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-pwa">
+    <button class="close-btn" onclick="close('pwa')">✕</button>
+    <h2>📱 PWA do Segurado</h2>
+    <p class="lead">Aplicativo web instalável no celular. Cada singular tem sua própria URL e identidade visual. Funciona offline com service worker.</p>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Rotas do app</h4>
+        <ul>
+          <li><span class="dot"></span>/s/[slug] — Home (dashboard)</li>
+          <li><span class="dot"></span>/s/[slug]/apolices/[id] — Minha apólice</li>
+          <li><span class="dot"></span>/s/[slug]/boletos — Faturas em aberto</li>
+          <li><span class="dot"></span>/s/[slug]/sinistros — Meus sinistros</li>
+          <li><span class="dot"></span>/s/[slug]/sinistros/novo — Abrir sinistro</li>
+          <li><span class="dot"></span>/s/[slug]/assistencia — Assistência 24h</li>
+          <li><span class="dot"></span>/s/[slug]/vistoria/[id] — Enviar fotos</li>
+          <li><span class="dot"></span>/s/[slug]/ajuda/* — FAQ por tema</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Branding por singular</h4>
+        <ul>
+          <li><span class="dot"></span>Logo da cooperativa</li>
+          <li><span class="dot"></span>Cor primária dinâmica do banco</li>
+          <li><span class="dot"></span>Tagline personalizada</li>
+          <li><span class="dot"></span>Manifest WebApp por slug</li>
+          <li><span class="dot"></span>URL: exemplo.soufluir.com</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Push Notifications</h4>
+        <ul>
+          <li><span class="dot"></span>Boleto vencendo</li>
+          <li><span class="dot"></span>Mudança de status do sinistro</li>
+          <li><span class="dot"></span>Resultado da vistoria</li>
+          <li><span class="dot"></span>Mensagens da cooperativa</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Auth do membro</h4>
+        <ul>
+          <li><span class="dot"></span>CPF + senha</li>
+          <li><span class="dot"></span>Google OAuth (cadastro)</li>
+          <li><span class="dot"></span>Convite por token (reset/ativação)</li>
+          <li><span class="dot"></span>Cadastro pendente → aprovação do operador</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-admin">
+    <button class="close-btn" onclick="close('admin')">✕</button>
+    <h2>⚙️ Administração do Sistema</h2>
+    <p class="lead">Todas as tabelas de configuração que alimentam o motor de cálculo e os módulos. Só o ADMIN_FEDERACAO tem acesso completo.</p>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>Taxas por UF</h4>
+        <ul>
+          <li><span class="dot"></span>Taxa base por produto e estado</li>
+          <li><span class="dot"></span>Vigência com data de início/fim</li>
+          <li><span class="dot"></span>Histórico de versões</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Fatores de risco</h4>
+        <ul>
+          <li><span class="dot"></span>Faixas etárias (multiplicadores)</li>
+          <li><span class="dot"></span>Categorias de veículo (popular, médio, executivo)</li>
+          <li><span class="dot"></span>Tipo de construção do imóvel</li>
+          <li><span class="dot"></span>Ocupação/profissão</li>
+          <li><span class="dot"></span>Bônus-Malus (histórico de sinistros)</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Tributos</h4>
+        <ul>
+          <li><span class="dot"></span>IOF: 7,38% padrão (por produto)</li>
+          <li><span class="dot"></span>PIS e COFINS por produto</li>
+          <li><span class="dot"></span>Aplicados no cálculo do prêmio líquido</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Planos e coberturas</h4>
+        <ul>
+          <li><span class="dot"></span>Planos: BRONZE / PRATA / OURO por produto</li>
+          <li><span class="dot"></span>18 planos seedados inicialmente</li>
+          <li><span class="dot"></span>Coberturas: VIDROS, TERCEIROS, ASSISTÊNCIA etc.</li>
+          <li><span class="dot"></span>Preço FIXO (R$) ou % do prêmio</li>
+          <li><span class="dot"></span>Dependências e incompatibilidades</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel" id="detail-integracoes">
+    <button class="close-btn" onclick="close('integracoes')">✕</button>
+    <h2>🔌 Integrações Externas</h2>
+    <p class="lead">Quatro serviços externos integrados e uma API B2B para sistemas de terceiros consultarem dados da plataforma.</p>
+
+    <div class="detail-cols">
+      <div class="detail-col">
+        <h4>WhatsApp (Evolution API)</h4>
+        <ul>
+          <li><span class="dot"></span>Envio automático: boleto gerado</li>
+          <li><span class="dot"></span>Envio automático: inadimplência</li>
+          <li><span class="dot"></span>Envio manual pelo operador (leads)</li>
+          <li><span class="dot"></span>Templates configuráveis</li>
+          <li><span class="dot"></span>Audit log de todas as mensagens</li>
+          <li><span class="dot"></span>Provider pluggável (mock p/ dev)</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>FIPE + CEP</h4>
+        <ul>
+          <li><span class="dot"></span>FIPE: tabela de veículos (AUTO)</li>
+          <li><span class="dot"></span>Busca por placa ou modelo</li>
+          <li><span class="dot"></span>ViaCEP: endereço completo a partir do CEP</li>
+          <li><span class="dot"></span>Usado no fast-track e na cotação</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>Gateway de pagamento (Asaas)</h4>
+        <ul>
+          <li><span class="dot"></span>Gerar boleto bancário</li>
+          <li><span class="dot"></span>PIX (copia e cola)</li>
+          <li><span class="dot"></span>Webhook: atualiza status automaticamente</li>
+          <li><span class="dot"></span>Provider pluggável (fácil trocar)</li>
+        </ul>
+      </div>
+      <div class="detail-col">
+        <h4>API B2B (OAuth2)</h4>
+        <ul>
+          <li><span class="dot"></span>Para ERPs e sistemas externos</li>
+          <li><span class="dot"></span>Bearer token com escopos</li>
+          <li><span class="dot"></span>Escopos: apolices.read, segurados.read…</li>
+          <li><span class="dot"></span>Expiração e revogação de credenciais</li>
+          <li><span class="dot"></span>CPF mascarado nas respostas (LGPD)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Gerado em 24/04/2026 · cooperativa-seguros-platform · Next.js 16 + Prisma + PostgreSQL
+</footer>
+
+<script>
+  let activePanel = null;
+
+  const accentMap = {
+    crm: '#3b82f6',
+    cotacao: '#8b5cf6',
+    apolices: '#10b981',
+    sinistros: '#ef4444',
+    vistorias: '#f59e0b',
+    financeiro: '#06b6d4',
+    relatorios: '#ec4899',
+    pwa: '#6366f1',
+    admin: '#94a3b8',
+    integracoes: '#10b981',
+  };
+
+  function toggle(id) {
+    const panel = document.getElementById('detail-' + id);
+    const card = document.getElementById('card-' + id);
+
+    if (activePanel && activePanel !== id) {
+      document.getElementById('detail-' + activePanel).classList.remove('visible');
+      document.getElementById('card-' + activePanel).classList.remove('active');
+    }
+
+    if (activePanel === id) {
+      panel.classList.remove('visible');
+      card.classList.remove('active');
+      activePanel = null;
+    } else {
+      panel.classList.add('visible');
+      card.classList.add('active');
+      activePanel = id;
+      setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    }
+  }
+
+  function close(id) {
+    document.getElementById('detail-' + id).classList.remove('visible');
+    document.getElementById('card-' + id).classList.remove('active');
+    activePanel = null;
+  }
+
+  // Set accent colors on panels
+  Object.entries(accentMap).forEach(([id, color]) => {
+    const card = document.getElementById('card-' + id);
+    if (card) {
+      card.querySelector('.module-card::before') // handled via CSS var
+      card.style.setProperty('--accent', color);
+      const before = card.querySelector('.module-icon');
+      if (before) before.style.borderRadius = '10px';
+    }
+    const panel = document.getElementById('detail-' + id);
+    if (panel) panel.style.setProperty('--accent', color);
+  });
+
+  // Set border-top colors on cards
+  const colors = {
+    'card-crm': '#3b82f6',
+    'card-cotacao': '#8b5cf6',
+    'card-apolices': '#10b981',
+    'card-sinistros': '#ef4444',
+    'card-vistorias': '#f59e0b',
+    'card-financeiro': '#06b6d4',
+    'card-relatorios': '#ec4899',
+    'card-pwa': '#6366f1',
+    'card-admin': '#64748b',
+    'card-integracoes': '#10b981',
+  };
+  Object.entries(colors).forEach(([id, color]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.borderTopColor = color;
+  });
+
+  function filterModules() {
+    const q = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('.module-card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(q) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
