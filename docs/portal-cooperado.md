@@ -23,7 +23,7 @@ Apps nativos custam R$ 50.000+ para desenvolver e R$ 10.000+/ano para manter. O 
 
 ## Identidade Visual por Singular
 
-Cada singular tem seu próprio PWA, acessível em `/{slug-da-cooperativa}/`. O app exibe:
+Cada singular tem seu próprio PWA, acessível em `/s/{slug-da-cooperativa}/`. O app exibe:
 
 - Logo da cooperativa no topo
 - Cores primária e secundária nos elementos de destaque
@@ -32,7 +32,59 @@ Cada singular tem seu próprio PWA, acessível em `/{slug-da-cooperativa}/`. O a
 
 O segurado de Joinville tem o app da "Cooperativa Uniseg Joinville". O segurado de Florianópolis tem o app da "Cooperativa Florianópolis". A experiência é da cooperativa, não da plataforma.
 
+---
+
+## Fluxo Completo — Do Cadastro à Apólice
+
+O onboarding do segurado no PWA segue etapas obrigatórias sequenciais:
+
+```
+1. CADASTRO
+   Segurado preenche dados básicos no portal da singular
+   (ou é cadastrado diretamente pelo operador)
+        ↓
+2. APROVAÇÃO
+   Operador aprova o cadastro no backoffice
+        ↓
+3. ACESSO
+   Segurado recebe link de convite, define senha e instala o PWA
+        ↓
+4. VISTORIA DE CADASTRO  ← etapa obrigatória nova
+   Sistema redireciona automaticamente para a tela de vistoria
+   7 fotos obrigatórias + análise por IA
+        ↓
+5. ANÁLISE
+   Operador revisa as fotos e aprova/reprova
+        ↓
+6. EMISSÃO
+   Operador emite a apólice para o segurado
+        ↓
+7. PORTAL COMPLETO
+   Segurado acessa boletos, sinistros, assistência, etc.
+```
+
+### Por que a vistoria é obrigatória antes da apólice?
+
+A vistoria de cadastro substitui a vistoria presencial tradicional — que levava dias e gerava custos logísticos. O cooperado realiza em minutos pelo celular. Sem vistoria **APROVADA**, a emissão da apólice é bloqueada no sistema.
+
+---
+
 ## Funcionalidades do PWA
+
+### Vistoria de Cadastro (onboarding)
+
+Etapa obrigatória antes da primeira apólice. O sistema redireciona automaticamente para esta tela assim que o segurado faz login sem ter apólice ativa.
+
+- Barra de progresso: **Cadastro → Vistoria → Análise → Apólice**
+- Consentimento explícito de análise por IA antes do upload (LGPD)
+- 7 posições fotográficas obrigatórias (câmera traseira abre automaticamente no celular)
+- Slots vermelhos indicam fotos faltantes — botão de envio bloqueado até completar
+- Status em tempo real: EM_ANALISE → APROVADA
+
+Enquanto aguarda o resultado:
+- **Em análise**: banner azul no home — "Suas fotos estão sendo analisadas"
+- **Aprovada**: banner verde — "Vistoria aprovada! Um consultor entrará em contato"
+- **Reprovada**: tela de reenvio com indicação de quais fotos precisam ser refeitas
 
 ### Boletos e Pagamentos
 
@@ -47,20 +99,13 @@ O segurado acessa o histórico completo de cobranças mensais:
 
 O segurado gerencia sinistros sem sair do app:
 
-- **Abre novo sinistro** diretamente pelo PWA, com formulário guiado
-- Informa data da ocorrência e descrição detalhada
+- **Abre novo sinistro** com formulário guiado (data, descrição, severidade)
 - Acompanha o status (ABERTO → EM_ANALISE → APROVADO/NEGADO → PAGO) em tempo real
 - Recebe notificação push a cada mudança de status
 
-### Vistoria do Veículo
+### Vistoria de Apólice
 
-O cooperado realiza a vistoria integralmente pelo smartphone:
-
-1. Acessa "Vistoria" no menu
-2. O app solicita permissão de localização (GPS capturado automaticamente)
-3. Guia o segurado pelas 7 posições de fotografia
-4. Fotos são enviadas para análise da IA
-5. Status da vistoria é acompanhado no app
+Além da vistoria de cadastro, o segurado pode realizar vistorias vinculadas a apólices existentes (renovação, endosso) quando solicitado pelo operador. O fluxo de câmera é idêntico ao de cadastro.
 
 ### Assistência 24h
 
@@ -70,27 +115,26 @@ O PWA centraliza os canais de assistência:
 - Números de emergência da assistência 24h (reboque, chaveiro, etc.)
 - Acesso rápido ao número do sinistro em andamento
 
-### Seção de Furto/Roubo
-
-Rota dedicada para casos de furto ou roubo do veículo segurado:
-
-- Orientações passo a passo sobre o que fazer imediatamente
-- Checklist de documentos necessários
-- Formulário de abertura de sinistro pré-configurado para esse tipo de ocorrência
-- Links para boletim de ocorrência online
-
 ### Minhas Apólices
 
 O segurado visualiza suas apólices ativas:
 
 - Produto, plano contratado e coberturas incluídas
-- Período de vigência
-- Prêmio mensal
+- Período de vigência e prêmio mensal
 - Documentos da apólice
+
+### Meus Dados e Privacidade (LGPD)
+
+Acesso direto em `/s/{slug}/meus-dados`:
+
+- **Portabilidade**: baixar todos os dados pessoais em JSON (perfil, apólices, sinistros, pagamentos)
+- **Exclusão**: solicitar exclusão de dados com protocolo e prazo de 15 dias úteis
+- **Notificações**: desativar notificações push a qualquer momento
+- **Política de privacidade**: link direto para leitura completa
 
 ### Notificações Push
 
-Com consentimento do usuário, o PWA envia notificações push para eventos importantes:
+Com consentimento do usuário (opt-in), o PWA envia notificações para:
 
 - Boleto gerado para o mês vigente
 - Vencimento de pagamento se aproximando
@@ -100,33 +144,31 @@ Com consentimento do usuário, o PWA envia notificações push para eventos impo
 
 As notificações chegam mesmo com o app fechado, no padrão das notificações nativas do smartphone.
 
-## Fluxo de Primeiro Acesso
-
-1. Cooperado recebe link de convite por e-mail ou WhatsApp
-2. Abre o link no navegador do smartphone
-3. Define sua senha no formulário de ativação
-4. Visualiza o prompt "Adicionar à tela inicial" — clica para instalar o PWA
-5. Ativa as notificações push quando solicitado
-6. App está instalado e pronto para uso
+---
 
 ## Autenticação
 
-O segurado faz login com CPF (ou e-mail) e senha. A sessão é mantida por tempo configurável, evitando que o cooperado precise se autenticar toda vez que abre o app. Em caso de dúvida ou perda de senha, o reset pode ser feito diretamente no app.
+O segurado faz login com CPF (ou e-mail) e senha. A sessão é mantida por tempo configurável, evitando autenticação a cada abertura do app.
 
-Para novos cooperados, a opção de cadastro via conta Google também está disponível — sujeita à aprovação do operador da singular.
+Para novos cooperados, o cadastro via conta Google também está disponível — sujeito à aprovação manual do operador da singular.
+
+---
 
 ## Funcionalidades Resumidas
 
 | Funcionalidade | Disponível no PWA |
 |---|---|
+| Vistoria de cadastro obrigatória (onboarding) | Sim — etapa 1 |
 | Visualizar apólices ativas | Sim |
 | Segunda via de boleto / Pix | Sim |
 | Abrir sinistro | Sim |
 | Acompanhar status do sinistro | Sim |
-| Realizar vistoria do veículo | Sim |
+| Vistoria de renovação / endosso | Sim |
 | Assistência 24h e emergência | Sim |
 | Notificações push | Sim (com consentimento) |
 | Histórico de pagamentos | Sim |
+| Exportar meus dados (LGPD) | Sim |
+| Solicitar exclusão de dados (LGPD) | Sim |
 | Login com CPF/e-mail ou Google | Sim |
 | Funcionar offline (parcial) | Sim |
 | Instalar na tela inicial | Sim |
@@ -134,11 +176,11 @@ Para novos cooperados, a opção de cadastro via conta Google também está disp
 ![Home do PWA do segurado](../static/img/screenshots/pwa-home.png)
 
 :::info Captura sugerida
-Tela inicial do PWA mostrando logo da cooperativa no topo, saudação com nome do segurado, cards de acesso rápido (Boletos, Sinistros, Vistoria, Assistência), e badge de notificação se houver pagamento pendente.
+Tela inicial do PWA mostrando logo da cooperativa, saudação com nome do segurado, cards de acesso rápido (Boletos, Sinistros, Vistoria, Assistência) e — quando aplicável — banner de status de vistoria em análise ou aprovada.
 :::
 
 ![Tela de boletos no PWA](../static/img/screenshots/pwa-boletos.png)
 
 :::info Captura sugerida
-Lista de competências mensais com status visual (ícone verde para pago, vermelho para atrasado, cinza para pendente), valor do prêmio e botão "Ver Boleto / Pix" para as competências não pagas.
+Lista de competências mensais com status visual (verde pago, vermelho atrasado, cinza pendente), valor do prêmio e botão "Ver Boleto / Pix" para as competências não pagas.
 :::
